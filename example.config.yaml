@@ -1,0 +1,18 @@
+mfa_serial: arn:aws:iam::000000000000:mfa/my_mfa_serial
+roles:
+  - name: something-prod-readonly
+    arn: arn:aws:iam::000000000000:role/ReadOnly
+    aliases:
+      - something-prod
+      - prod-readonly
+
+  - name: something-test-developer
+    arn: arn:aws:iam::111111111111:role/Developer
+    aliases:
+      - something-dev
+      - test-dev
+
+  - name: something-test-readonly
+    arn: arn:aws:iam::111111111111:role/ReadOnly
+    aliases:
+      - test-readonly
