@@ -21,14 +21,7 @@ func init() {
 		log.Println("Verbose mode enabled.")
 	}
 
-	// Some defaults
-	if tokenRefreshWindowMinutes == 0 {
-		// Identity Account tokens are typically valid for 12 hours.
-		tokenRefreshWindowMinutes = 60
-	}
-
 	var homeDir string
-	var identityAccountCacheFileName string
 	var err error
 
 	if homeDir == "" {
@@ -67,15 +60,5 @@ func init() {
 	err = util.EnsureDirExists(cacheDir, 0700)
 	if err != nil {
 		log.Fatalln("Unable to create cacheDir:", err)
-	}
-
-	// Bootstrap the identityAccountCacheFile
-	if identityAccountCacheFileName == "" {
-		identityAccountCacheFileName = "identity-account.json"
-	}
-	identityAccountCacheFile = strings.Join([]string{cacheDir, identityAccountCacheFileName}, string(os.PathSeparator))
-	err = util.EnsureFileExists(identityAccountCacheFile, 0600)
-	if err != nil {
-		log.Fatalln("Unable to create identityAccountCacheFile:", err)
 	}
 }

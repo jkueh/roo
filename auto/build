@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -eu
+
+GOOS="${GOOS:-linux}"
+GOARCH="${GOARCH:-amd64}"
+
+go build \
+  -ldflags "-X 'main.cacheDir=/tmp/roo'" \
+  -o roo \
+  "${@}"

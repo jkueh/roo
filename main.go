@@ -25,13 +25,9 @@ var verbose bool
 var configDir string
 var configFile string
 
-// cacheDir is separately configurable, as on systems you want it to write to /tmp so that the keys are purged after
-// the system is rebooted.
+// cacheDir is separately configurable, as on some systems you want it to write to /tmp so that the keys are purged
+// after the system is rebooted.
 var cacheDir string
-
-var tokenRefreshWindowMinutes int
-var identityAccountCacheFileName string
-var identityAccountCacheFile string
 
 func main() {
 	var targetRole string
