@@ -5,7 +5,12 @@ set -eu
 GOOS="${GOOS:-linux}"
 GOARCH="${GOARCH:-amd64}"
 
-go build \
-  -ldflags "-X 'main.cacheDir=/tmp/roo'" \
-  -o roo \
-  "${@}"
+function buildCommand() {
+  go build -v \
+    -ldflags "-X 'main.cacheDir=/tmp/roo'" \
+    -o "build/roo_${GOOS}_${GOARCH}" \
+    "${@}"
+}
+
+GOOS=linux  GOARCH=amd64 buildCommand
+GOOS=darwin GOARCH=amd64 buildCommand

@@ -1,0 +1,68 @@
+# Creates a GitHub release
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+name: Create Release
+
+jobs:
+  build:
+    name: Build the Artefacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.14
+        id: go
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build project # This would actually build your project, using zip for an example artifact
+        run: |
+          auto/build
+          zip --junk-paths build/*
+      - name: Upload build artefacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: binaries
+          path: build/
+  create_release:
+    name: Creates the release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download compiled binaries
+        uses: actions/download-artifact@v2
+        with:
+          name: binaries
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: Upload Linux amd64 binary
+        id: upload-release-asset-linux-amd64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/roo_linux_amd64
+          asset_name: roo_linux_amd64
+          asset_content_type: application/octet-stream
+      - name: Upload Darwin amd64 binary
+        id: upload-release-asset-darwin-amd64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/roo_darwin_amd64
+          asset_name: roo_darwin_amd64
+          asset_content_type: application/octet-stream
