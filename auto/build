@@ -9,7 +9,7 @@ GITHUB_REF="${GITHUB_REF:-""}"
 function buildCommand() {
   go build -v \
     -ldflags \
-      "-X 'main.cacheDir=/tmp/roo' -X 'main.version=${GITHUB_REF}'" \
+      "-X 'main.cacheDir=/tmp/roo' -X 'main.version=${GITHUB_REF##*/}'" \
     -o "build/roo_${GOOS}_${GOARCH}" \
     "${@}"
 }
