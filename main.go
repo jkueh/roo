@@ -26,6 +26,7 @@ var debug bool
 var verbose bool
 var configDir string
 var configFile string
+var version string
 
 // cacheDir is separately configurable, as on some systems you want it to write to /tmp so that the keys are purged
 // after the system is rebooted.
@@ -36,13 +37,24 @@ func main() {
 	var baseProfile string
 	var oneTimePasscode string
 	var tokenNeedsRefresh bool
+	var showVersionInfo bool
 
 	flag.StringVar(&oneTimePasscode, "code", "", "MFA Token OTP - The 6+ digit code that refreshes every 30 seconds.")
 	flag.StringVar(&targetRole, "role", "", "The role name or alias to assume.")
 	flag.StringVar(&baseProfile, "profile", "", "The base AWS config profile to use when creating the session.")
+	flag.BoolVar(&showVersionInfo, "version", false, "Show version information.")
 	flag.BoolVar(&tokenNeedsRefresh, "refresh", false, "Force a refresh of all tokens")
 
 	flag.Parse()
+
+	if showVersionInfo {
+		if version == "" {
+			fmt.Println("Roo version unknown - 'version' variable not set at build time.")
+		} else {
+			fmt.Println("Roo version", version)
+		}
+		os.Exit(0)
+	}
 
 	// Some flag debugging
 	if debug {

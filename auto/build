@@ -4,13 +4,15 @@ set -eu
 
 GOOS="${GOOS:-linux}"
 GOARCH="${GOARCH:-amd64}"
+GITHUB_REF="${GITHUB_REF:-""}"
 
 function buildCommand() {
   go build -v \
-    -ldflags "-X 'main.cacheDir=/tmp/roo'" \
+    -ldflags \
+      "-X 'main.cacheDir=/tmp/roo' -X 'main.version=${GITHUB_REF}'" \
     -o "build/roo_${GOOS}_${GOARCH}" \
     "${@}"
 }
 
-GOOS=linux  GOARCH=amd64 buildCommand
-GOOS=darwin GOARCH=amd64 buildCommand
+GOOS=linux  GOARCH=amd64 buildCommand "${@}"
+GOOS=darwin GOARCH=amd64 buildCommand "${@}"

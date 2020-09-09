@@ -31,7 +31,9 @@ jobs:
         fi
 
     - name: Build
-      run: go build -v .
+      run: auto/build
 
     - name: Test
-      run: go test -v .
+      run: |
+        build/roo_linux_amd64 -version
+        go test -v .
