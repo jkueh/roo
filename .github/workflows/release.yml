@@ -27,7 +27,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: binaries
-          path: build/
+          path: build/roo_*
   create_release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
@@ -37,6 +37,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: binaries
+          path: build/
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
