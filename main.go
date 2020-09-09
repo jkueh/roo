@@ -7,7 +7,9 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 
@@ -125,11 +127,13 @@ func main() {
 			log.Fatalln("An error occurred while trying to get caller identity:", err)
 		}
 		log.Println("Hello world, I'm", *callerIdentityOutput.Arn, "- Time to assume another role!")
+		timeNow := time.Now()
+		timeNowUnixIntString := strconv.FormatInt(timeNow.Unix(), 10)
 		assumeRoleInput := &sts.AssumeRoleInput{
 			SerialNumber:    aws.String(conf.MFASerial),
 			TokenCode:       aws.String(oneTimePasscode),
 			RoleArn:         aws.String(targetRole),
-			RoleSessionName: aws.String("jordan-test-local"),
+			RoleSessionName: aws.String("roo-" + timeNowUnixIntString),
 		}
 		assumeRoleOutput, err := stsClient.AssumeRole(assumeRoleInput)
 		if err != nil {
