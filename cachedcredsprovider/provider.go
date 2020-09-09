@@ -1,8 +1,7 @@
 package cachedcredsprovider
 
 import (
-	"encoding/json"
-	"io/ioutil"
+	"encoding/gob"
 	"log"
 	"os"
 	"time"
@@ -66,11 +65,21 @@ func (p *CachedCredProvider) loadFromDisk() error {
 	if _, err := os.Stat(p.cacheFilePath); os.IsNotExist(err) {
 		return err
 	}
-	var allegedCachedCredentials CachedCredentials
-	err := readCachedCredentialsFromFile(p.cacheFilePath, &allegedCachedCredentials)
+
+	cacheFile, err := os.Open(p.cacheFilePath)
 	if err != nil {
 		return err
 	}
+
+	fileDecoder := gob.NewDecoder(cacheFile)
+
+	var allegedCachedCredentials CachedCredentials
+	err = fileDecoder.Decode(&allegedCachedCredentials)
+	if err != nil {
+		return err
+	}
+
+	cacheFile.Close()
 
 	// Set the credentials struct in the provider
 	p.cachedCredentials = allegedCachedCredentials
@@ -97,17 +106,34 @@ func (p *CachedCredProvider) WriteNewCredentialsFromSTS(c *sts.Credentials, file
 		SessionToken:    *c.SessionToken,
 	}
 
-	credentialJSON, err := json.Marshal(p.cachedCredentials)
+	// Create the cachefile if it doesn't exist.
+	var cacheFile *os.File
+	var err error
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		cacheFile, err = os.Create(filePath)
+		if err != nil {
+			log.Println("WARNING: Unable to create cache file", filePath)
+			return err
+		}
+	} else {
+		cacheFile, err = os.Open(filePath)
+		if err != nil {
+			log.Println("WARNING: Unable to open cache file", filePath, "for writing:", err)
+			return err
+		}
+	}
+
+	// Ensure the file permissions have been set19
+
+	err = cacheFile.Chmod(0600)
 	if err != nil {
-		log.Println("WARNING: An error occurred while trying to marshal credentials into the JSON format:", err)
+		log.Println("WARNING: Unable to set the file mode on the cache file", filePath, "-", err)
 	}
 
 	// Write to the cacheFile
-	err = ioutil.WriteFile(filePath, credentialJSON, 0600)
-	if err != nil {
-		log.Println("WARNING: An error occurred while trying to write credentials to file:", err)
-		log.Println("File path:", filePath)
-	}
+	gobEncoder := gob.NewEncoder(cacheFile)
+	gobEncoder.Encode(p.cachedCredentials)
+	cacheFile.Close()
 
 	return err
 }
