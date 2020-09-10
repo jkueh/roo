@@ -181,3 +181,18 @@ func bootstrapConfig(filePath string) {
 
 	os.Exit(100)
 }
+
+// ListRoles outputs a list of configured roles.
+func (c *Config) ListRoles() {
+	for _, role := range c.Roles {
+		fmt.Println("ARN:", role.ARN)
+		fmt.Println("Name:", role.Name)
+		if len(role.Aliases) > 0 {
+			fmt.Println("Aliases:")
+			for _, alias := range role.Aliases {
+				fmt.Println("  - " + alias)
+			}
+		}
+		fmt.Println()
+	}
+}

@@ -38,14 +38,16 @@ func main() {
 	var oneTimePasscode string
 	var tokenNeedsRefresh bool
 	var showVersionInfo bool
+	var showRoleList bool
 
+	flag.BoolVar(&debug, "debug", false, "Enables debug logging.")
+	flag.BoolVar(&showRoleList, "list", false, "Displays a list of configured roles, then exits.")
+	flag.BoolVar(&showVersionInfo, "version", false, "Show version information.")
+	flag.BoolVar(&tokenNeedsRefresh, "refresh", false, "Force a refresh of all tokens")
+	flag.BoolVar(&verbose, "verbose", false, "Enables verbose logging.")
+	flag.StringVar(&baseProfile, "profile", "", "The base AWS config profile to use when creating the session.")
 	flag.StringVar(&oneTimePasscode, "code", "", "MFA Token OTP - The 6+ digit code that refreshes every 30 seconds.")
 	flag.StringVar(&targetRole, "role", "", "The role name or alias to assume.")
-	flag.StringVar(&baseProfile, "profile", "", "The base AWS config profile to use when creating the session.")
-	flag.BoolVar(&showVersionInfo, "version", false, "Show version information.")
-	flag.BoolVar(&verbose, "verbose", false, "Enables verbose logging.")
-	flag.BoolVar(&debug, "debug", false, "Enables debug logging.")
-	flag.BoolVar(&tokenNeedsRefresh, "refresh", false, "Force a refresh of all tokens")
 
 	flag.Parse()
 
@@ -62,16 +64,20 @@ func main() {
 
 	// Some flag debugging
 	if debug {
-		log.Println("Via command line parameters:")
-		log.Println("  oneTimePasscode:", oneTimePasscode)
-		log.Println("  targetRole:", targetRole)
-		log.Println("  baseProfile:", baseProfile)
-		log.Println("  tokenNeedsRefresh:", tokenNeedsRefresh)
+		log.Println("Command Line Parameters")
+		flag.VisitAll(func(f *flag.Flag) {
+			log.Println(f.Name+":", "\t", f.Value)
+		})
 		log.Println()
 	}
 
 	// Ensure we have a role definition for the role
 	conf := config.New(configFile)
+
+	if showRoleList {
+		conf.ListRoles()
+		os.Exit(0)
+	}
 	role := conf.GetRole(targetRole)
 
 	if debug {
