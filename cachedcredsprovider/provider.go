@@ -116,8 +116,7 @@ func (p *CachedCredProvider) WriteNewCredentialsFromSTS(c *sts.Credentials, file
 			return err
 		}
 	} else {
-		cacheFile, err = os.Open(filePath)
-		if err != nil {
+		if cacheFile, err = os.OpenFile(filePath, os.O_WRONLY, os.ModeAppend); err != nil {
 			log.Println("WARNING: Unable to open cache file", filePath, "for writing:", err)
 			return err
 		}
@@ -132,8 +131,10 @@ func (p *CachedCredProvider) WriteNewCredentialsFromSTS(c *sts.Credentials, file
 
 	// Write to the cacheFile
 	gobEncoder := gob.NewEncoder(cacheFile)
-	gobEncoder.Encode(p.cachedCredentials)
-	cacheFile.Close()
+	err = gobEncoder.Encode(p.cachedCredentials)
+	if err != nil {
+		return err
+	}
 
-	return err
+	return cacheFile.Close()
 }
