@@ -36,3 +36,9 @@ jobs:
       run: |
         build/roo_linux_amd64 -version
         go test -v .
+
+    - name: Upload build artefacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: binaries
+        path: build/roo_*
