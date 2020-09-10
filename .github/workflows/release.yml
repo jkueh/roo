@@ -19,7 +19,7 @@ jobs:
         id: go
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Build project # This would actually build your project, using zip for an example artifact
+      - name: Build project
         run: auto/build
       - name: Upload build artefacts
         uses: actions/upload-artifact@v2
@@ -65,4 +65,14 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: build/roo_darwin_amd64
           asset_name: roo_darwin_amd64
+          asset_content_type: application/octet-stream
+      - name: Upload Windows amd64 binary
+        id: upload-release-asset-windows-amd64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/roo_windows_amd64
+          asset_name: roo_windows_amd64
           asset_content_type: application/octet-stream

@@ -7,12 +7,21 @@ GOARCH="${GOARCH:-amd64}"
 GITHUB_REF="${GITHUB_REF:-""}"
 
 function buildCommand() {
+  OUTPUT_PATH="build/roo_${GOOS}_${GOARCH}"
+  echo "Building: ${OUTPUT_PATH}"
   go build -v \
-    -ldflags \
-      "-X 'main.cacheDir=/tmp/roo' -X 'main.version=${GITHUB_REF##*/}'" \
-    -o "build/roo_${GOOS}_${GOARCH}" \
-    "${@}"
+  -ldflags \
+  "-X 'main.cacheDir=${CACHE_DIR:-""}' -X 'main.version=${GITHUB_REF##*/}'" \
+  -o "${OUTPUT_PATH}" \
+  "${@}"
 }
 
-GOOS=linux  GOARCH=amd64 buildCommand "${@}"
-GOOS=darwin GOARCH=amd64 buildCommand "${@}"
+# Note to self: A full list can be found by running 'go tool dist list'.
+
+rm -v build/roo_* 2> /dev/null || true
+
+GOOS=linux    GOARCH=amd64  CACHE_DIR="/tmp/roo"  buildCommand "${@}"
+GOOS=darwin   GOARCH=amd64  CACHE_DIR="/tmp/roo"  buildCommand "${@}"
+GOOS=windows  GOARCH=amd64                        buildCommand "${@}"
+
+chmod 755 build/roo_*
