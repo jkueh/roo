@@ -43,6 +43,8 @@ func main() {
 	flag.StringVar(&targetRole, "role", "", "The role name or alias to assume.")
 	flag.StringVar(&baseProfile, "profile", "", "The base AWS config profile to use when creating the session.")
 	flag.BoolVar(&showVersionInfo, "version", false, "Show version information.")
+	flag.BoolVar(&verbose, "verbose", false, "Enables verbose logging.")
+	flag.BoolVar(&debug, "debug", false, "Enables debug logging.")
 	flag.BoolVar(&tokenNeedsRefresh, "refresh", false, "Force a refresh of all tokens")
 
 	flag.Parse()
@@ -108,13 +110,17 @@ func main() {
 
 	// Define our credential providers
 	cachedProvider := cachedcredsprovider.New(cacheFilePath)
+	if debug {
+		currentCreds, _ := cachedProvider.Retrieve()
+		if currentCreds.AccessKeyID != "" {
+			log.Println("Current Access Key ID:", currentCreds.AccessKeyID)
+		}
+	}
 
 	if !tokenNeedsRefresh {
 		tokenNeedsRefresh = cachedProvider.IsExpired()
 		if debug && tokenNeedsRefresh {
 			log.Println("Refresh required - cachedProvider indicated credentials are expired.")
-			retrievedCreds, _ := cachedProvider.Retrieve()
-			log.Println(retrievedCreds)
 		}
 	}
 
@@ -146,21 +152,34 @@ func main() {
 			log.Println("Hello world, I'm", *callerIdentityOutput.Arn, "- Time to assume another role!")
 		}
 		timeNow := time.Now()
-		timeNowUnixIntString := strconv.FormatInt(timeNow.Unix(), 10)
+		timeNowUnixNanoString := strconv.FormatInt(timeNow.UnixNano(), 10)
 		assumeRoleInput := &sts.AssumeRoleInput{
 			SerialNumber:    aws.String(conf.MFASerial),
 			TokenCode:       aws.String(oneTimePasscode),
 			RoleArn:         aws.String(role.ARN),
-			RoleSessionName: aws.String("roo-" + timeNowUnixIntString),
+			RoleSessionName: aws.String("roo-" + timeNowUnixNanoString),
 		}
 		assumeRoleOutput, err := stsClient.AssumeRole(assumeRoleInput)
 		if err != nil {
 			log.Fatalln("An error occurred while trying to assume the target role:", err)
 		}
-		log.Println("We have successfully assumed the role:", *assumeRoleOutput.AssumedRoleUser.Arn)
+		if verbose {
+			log.Println("We have successfully assumed the role:", *assumeRoleOutput.AssumedRoleUser.Arn)
+		}
 
 		// Okay, time to build the cachedCredentials object.
-		cachedProvider.WriteNewCredentialsFromSTS(assumeRoleOutput.Credentials, cacheFilePath)
+		err = cachedProvider.WriteNewCredentialsFromSTS(assumeRoleOutput.Credentials, cacheFilePath)
+		if err != nil {
+			log.Println("WARNING: An error occurred while trying to write new credentials to the cache file:", err)
+		} else {
+			if debug {
+				log.Println("New credentials written - New Access Key ID:", *assumeRoleOutput.Credentials.AccessKeyId)
+			}
+		}
+	} else {
+		if verbose {
+			log.Println("Using cached credentials!")
+		}
 	}
 
 	// Now we use the new cachedProvider to export our environment variables
@@ -168,14 +187,16 @@ func main() {
 	if err != nil {
 		log.Fatalln("Unable to retrieve credentials:", err)
 	}
-
-	staticCredentials := credentials.NewStaticCredentialsFromCreds(retrievedCreds)
+	if debug {
+		log.Println("Retrieved credentials with Access Key ID", retrievedCreds.AccessKeyID)
+	}
 
 	os.Setenv("AWS_ACCESS_KEY_ID", retrievedCreds.AccessKeyID)
 	os.Setenv("AWS_SECRET_ACCESS_KEY", retrievedCreds.SecretAccessKey)
 	os.Setenv("AWS_SESSION_TOKEN", retrievedCreds.SessionToken)
 
-	if verbose {
+	if debug {
+		staticCredentials := credentials.NewStaticCredentialsFromCreds(retrievedCreds)
 		stsSession := session.Must(session.NewSessionWithOptions(session.Options{
 			Config: aws.Config{
 				Credentials: staticCredentials,
@@ -200,8 +221,10 @@ func main() {
 		log.Println("We're going to want to run the following command:", flag.Args())
 	}
 	cmd := exec.Command("/usr/bin/env", flag.Args()...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+
+	// Attach STDOUT, STDERR, and STDIN
+	cmd.Stdout, cmd.Stderr, cmd.Stdin = os.Stdout, os.Stderr, os.Stdin
+
 	err = cmd.Run()
 	if err != nil {
 		log.Println("An error occurred while trying to execute command:", err)
