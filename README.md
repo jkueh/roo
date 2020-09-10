@@ -18,14 +18,23 @@ wrote a thing to do it for me.
 
 ## Configuration
 
-Create a file at `~/.roo/config.yaml`, with the following contents (modify values to your liking / requirements)
+If you run `roo` once without a configuration file, it will generate a dummy one for you (at `${HOME}/.roo/config.yaml`)
+
+Alternatively, you can write your own (See Configuration Reference).
+
+### Configuration Reference
+
+This is an example of the configuration file, commonly found at `${HOME}/.roo/config.yaml`.
+Modify these values to your liking / requirements
 
 ```yaml
 mfa_serial: arn:aws:iam::000000000000:mfa/my_mfa_serial
+base_profile: some-base-profile # optional - this is the AWS profile you use to log into the authentication account.
 roles:
   - name: something-prod-readonly
+    default: yes # optional, but helpful!
     arn: arn:aws:iam::000000000000:role/ReadOnly
-    aliases:
+    aliases: # optional, and also helpful!
       - something-prod
       - prod-readonly
 

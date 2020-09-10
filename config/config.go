@@ -18,8 +18,9 @@ var Debug bool
 
 // Config represents the config file.
 type Config struct {
-	MFASerial string       `yaml:"mfa_serial"`
-	Roles     []RoleConfig `yaml:"roles"`
+	DefaultProfile string       `yaml:"default_profile"`
+	MFASerial      string       `yaml:"mfa_serial"`
+	Roles          []RoleConfig `yaml:"roles"`
 }
 
 // New - Returns a hydrated instance of Config from configFile.
@@ -143,9 +144,10 @@ func bootstrapConfig(filePath string) {
 		MFASerial: "arn:aws:iam::000000000000:mfa/your_mfa_serial",
 		Roles: []RoleConfig{
 			{
-				Name:    "one_of_your_accounts",
-				ARN:     "arn:aws:iam::000000000000:role/DeleteOnly",
-				Aliases: []string{"delete", "deleteprod"},
+				Name:      "one_of_your_accounts",
+				IsDefault: true,
+				ARN:       "arn:aws:iam::000000000000:role/DeleteOnly",
+				Aliases:   []string{"delete", "deleteprod"},
 			},
 			{
 				Name:    "another_one_of_your_accounts",
@@ -184,7 +186,15 @@ func bootstrapConfig(filePath string) {
 
 // ListRoles outputs a list of configured roles.
 func (c *Config) ListRoles() {
+	var defaultCount int
+	if len(c.Roles) <= 0 {
+		fmt.Println("It looks like you haven't got any roles configured!")
+		return
+	}
 	for _, role := range c.Roles {
+		if role.IsDefault {
+			defaultCount++
+		}
 		fmt.Println("ARN:", role.ARN)
 		fmt.Println("Name:", role.Name)
 		if len(role.Aliases) > 0 {
@@ -195,4 +205,18 @@ func (c *Config) ListRoles() {
 		}
 		fmt.Println()
 	}
+	if defaultCount > 1 {
+		fmt.Println("Hey, it looks like you've got more than one role flagged as default!")
+		fmt.Println("Well use the first one in the list if a role isn't specified via the -role argument.")
+	}
+}
+
+// GetDefaultRole returns the first role flagged as default.
+func (c *Config) GetDefaultRole() *RoleConfig {
+	for _, role := range c.Roles {
+		if role.IsDefault {
+			return &role
+		}
+	}
+	return &RoleConfig{}
 }

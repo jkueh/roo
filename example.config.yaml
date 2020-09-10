@@ -1,6 +1,8 @@
-mfa_serial: arn:aws:iam::000000000000:mfa/my_mfa_serial
+mfa_serial: arn:aws:iam::000000000000:mfa/my_mfa_serial # The serial ARN of the MFA token you use to log in.
+default_profile: my-base-profile # Optional - A base profile that contains credentials to use when assuming roles.
 roles:
   - name: something-prod-readonly
+    default: yes
     arn: arn:aws:iam::000000000000:role/ReadOnly
     aliases:
       - something-prod

@@ -78,19 +78,30 @@ func main() {
 		conf.ListRoles()
 		os.Exit(0)
 	}
-	role := conf.GetRole(targetRole)
+
+	var role *config.RoleConfig
+	if targetRole == "" {
+		// See if we can pull a default
+		role = conf.GetDefaultRole()
+		if role == nil {
+			flag.Usage()
+			log.Fatalln("Role not provided (-role)")
+		}
+	} else {
+		role = conf.GetRole(targetRole)
+	}
 
 	if debug {
 		log.Println("role:", role)
 	}
 
-	if targetRole == "" {
-		flag.Usage()
-		log.Fatalln("Role not provided (-role)")
-	}
-
 	if role.ARN == "" {
 		log.Fatalln("Unable to find role by name or alias:", targetRole)
+	}
+
+	// If a base profile wasn't specified on the command line, then try use a default - if configured.
+	if baseProfile == "" {
+		baseProfile = conf.DefaultProfile
 	}
 
 	// The cache file name we use is {{.AccountNumber}}-{{.RoleName}}.json
