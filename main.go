@@ -49,6 +49,8 @@ func main() {
 
 	flag.Parse()
 
+	config.Debug, config.Verbose = debug, verbose
+
 	if showVersionInfo {
 		if version == "" {
 			fmt.Println("Roo version unknown - 'version' variable not set at build time.")
