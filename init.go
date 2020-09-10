@@ -45,13 +45,9 @@ func init() {
 	if err != nil {
 		log.Fatalln("Unable to create configDir:", err)
 	}
-	// Create the config file if it doesn't exist.
+	// Set the default config file path.
 	if configFile == "" {
 		configFile = strings.Join([]string{configDir, "config.yaml"}, string(os.PathSeparator))
-	}
-	err = util.EnsureFileExists(configFile, 0600)
-	if err != nil {
-		log.Fatalln("Unable to create configFile:", err)
 	}
 
 	if cacheDir == "" {

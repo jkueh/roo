@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/jkueh/roo/util"
 	"gopkg.in/yaml.v2"
 )
 
@@ -23,6 +24,10 @@ type Config struct {
 
 // New - Returns a hydrated instance of Config from configFile.
 func New(filePath string) *Config {
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		bootstrapConfig(filePath)
+	}
+
 	configFile, err := os.Open(filePath)
 	if err != nil {
 		log.Fatalln(fmt.Sprintf(
@@ -130,4 +135,49 @@ func (c *Config) GetRole(searchString string) *RoleConfig {
 		return foundByAlias
 	}
 	return &RoleConfig{}
+}
+
+// bootstrapConfig will generate a generic config file, and exit.
+func bootstrapConfig(filePath string) {
+	exampleConfigYAML, err := yaml.Marshal(Config{
+		MFASerial: "arn:aws:iam::000000000000:mfa/your_mfa_serial",
+		Roles: []RoleConfig{
+			{
+				Name:    "one_of_your_accounts",
+				ARN:     "arn:aws:iam::000000000000:role/DeleteOnly",
+				Aliases: []string{"delete", "deleteprod"},
+			},
+			{
+				Name:    "another_one_of_your_accounts",
+				ARN:     "arn:aws:iam::111111111111:role/ReadOnly",
+				Aliases: []string{"readonly", "ro"},
+			},
+		},
+	})
+	if err != nil {
+		log.Fatalln("Unable to marshal the example config struct into YAML.")
+	}
+
+	err = util.EnsureFileExists(filePath, 0600)
+	if err != nil {
+		log.Fatalln("Unable to create configFile:", filePath, err)
+	}
+
+	file, err := os.OpenFile(filePath, os.O_WRONLY, os.ModeAppend)
+	if err != nil {
+		log.Fatalln("Unable to open config file to bootstrap:", err)
+	}
+
+	_, err = file.Write(exampleConfigYAML)
+	if err != nil {
+		log.Println("Unable to write example config to file:", filePath)
+		log.Println(err)
+	}
+
+	fmt.Println("Hey there! I noticed you didn't have a configuration file, so I created one for you.")
+	fmt.Println("You can find it at", filePath, "- You should probably modify it with the values you need!")
+
+	file.Close()
+
+	os.Exit(100)
 }
