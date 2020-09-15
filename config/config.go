@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/jkueh/roo/util"
 	"gopkg.in/yaml.v2"
@@ -58,82 +59,27 @@ func New(filePath string) *Config {
 func (c *Config) GetRole(searchString string) *RoleConfig {
 	// Search precedence: ARN, Name, then aliases as ordered.
 
-	var foundByName *RoleConfig
-	var foundByAlias *RoleConfig
-
-	// This feels like I'm optimising for O(n) where n isn't very large, but let's not jump to conclusions about how many
-	// roles people realistically have here...
+	// Search roles by ARN first.
 	for _, roleConfig := range c.Roles {
-
-		if Debug {
-			log.Println("Checking the following role config:", roleConfig)
-		}
-
-		if Debug {
-			log.Println("Found by name:", foundByName)
-			log.Println("Found by alias:", foundByAlias)
-		}
-
-		// If we've found one by name or ARN, we don't need to do any more processing.
-		if foundByName != nil {
-			break
-		}
-
 		if roleConfig.ARN == searchString {
-			if Debug {
-				log.Println("Found role by ARN:", roleConfig.ARN)
-			}
 			return &roleConfig
 		}
+	}
 
-		// If there's a direct name match, we can set the variable, then exit early.
+	// Then search by name
+	for _, roleConfig := range c.Roles {
 		if roleConfig.Name == searchString {
-			if Debug {
-				log.Println("Found role by name:", roleConfig.Name)
-			}
-			foundByName = &roleConfig
-		}
-
-		// If we haven't found one by name or by alias, check the current roleConfig against the aliases.
-		if foundByName == nil && foundByAlias == nil {
-			if Debug {
-				log.Println("Checking for an alias match:", roleConfig.ARN)
-			}
-			for _, alias := range roleConfig.Aliases {
-				if alias == searchString {
-					foundByAlias = &roleConfig
-					if Debug {
-						log.Println("Found role by alias:", alias, foundByAlias)
-					}
-					break
-				}
-			}
-			// TODO: Work out why the heck this break statement fixes GitHub Issue #5.
-			if foundByAlias != nil {
-				break
-			}
-		}
-		if Debug {
-			fmt.Println()
+			return &roleConfig
 		}
 	}
 
-	if Debug {
-		log.Println("Found by name:", foundByName)
-		log.Println("Found by alias:", foundByAlias)
-	}
-
-	if foundByName != nil {
-		if Debug {
-			log.Println("Returning match found by name:", foundByName)
+	// Then search by alias.
+	for _, roleConfig := range c.Roles {
+		for _, alias := range roleConfig.Aliases {
+			if strings.ToLower(alias) == strings.ToLower(searchString) {
+				return &roleConfig
+			}
 		}
-		return foundByName
-	}
-	if foundByAlias != nil {
-		if Debug {
-			log.Println("Returning match found by alias:", foundByAlias)
-		}
-		return foundByAlias
 	}
 	return &RoleConfig{}
 }
