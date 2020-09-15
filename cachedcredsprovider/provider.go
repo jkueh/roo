@@ -138,3 +138,8 @@ func (p *CachedCredProvider) WriteNewCredentialsFromSTS(c *sts.Credentials, file
 
 	return cacheFile.Close()
 }
+
+// GetCredentialExpiryTime - Returns the expiry time for these credentials.
+func (p *CachedCredProvider) GetCredentialExpiryTime() time.Time {
+	return p.cachedCredentials.ExpiresAt
+}

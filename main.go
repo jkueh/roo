@@ -33,12 +33,13 @@ var version string
 var cacheDir string
 
 func main() {
-	var targetRole string
 	var baseProfile string
 	var oneTimePasscode string
-	var tokenNeedsRefresh bool
-	var showVersionInfo bool
 	var showRoleList bool
+	var showVersionInfo bool
+	var targetRole string
+	var tokenNeedsRefresh bool
+	var writeToProfile string
 
 	flag.BoolVar(&debug, "debug", false, "Enables debug logging.")
 	flag.BoolVar(&showRoleList, "list", false, "Displays a list of configured roles, then exits.")
@@ -48,6 +49,7 @@ func main() {
 	flag.StringVar(&baseProfile, "profile", "", "The base AWS config profile to use when creating the session.")
 	flag.StringVar(&oneTimePasscode, "code", "", "MFA Token OTP - The 6+ digit code that refreshes every 30 seconds.")
 	flag.StringVar(&targetRole, "role", "", "The role name or alias to assume.")
+	flag.StringVar(&writeToProfile, "write-profile", "", "The name of the profile to write credentials for.")
 
 	flag.Parse()
 
@@ -236,16 +238,59 @@ func main() {
 		}
 	}
 
-	if debug {
-		log.Println("We're going to want to run the following command:", flag.Args())
-	}
-	cmd := exec.Command("/usr/bin/env", flag.Args()...)
+	// There is an exception to evaluating commands - And that's if we've been asked to write these credentials to file.
+	if writeToProfile == "" {
+		if debug {
+			log.Println("We're going to want to run the following command:", flag.Args())
+		}
+		err := executeCommand(flag.Args()...)
+		if err != nil {
+			log.Println("An error occurred while trying to execute command:", err)
+		}
+	} else {
+		if verbose {
+			log.Println("We're going to write to profile! The profile's named", writeToProfile)
+		}
+		// Step 0 is to check that we have the AWS executable somewhere in the PATH.
+		cliPath, err := exec.LookPath("aws")
+		if err != nil {
+			log.Fatalln("Unable to find AWS CLI executable in PATH:", err)
+		}
+		if debug {
+			log.Println("Found it!", cliPath)
+		}
 
-	// Attach STDOUT, STDERR, and STDIN
-	cmd.Stdout, cmd.Stderr, cmd.Stdin = os.Stdout, os.Stderr, os.Stdin
+		// Okay, time to execute the commands we need to execute.
+		baseCommand := []string{cliPath, "--profile", writeToProfile, "configure", "set"}
 
-	err = cmd.Run()
-	if err != nil {
-		log.Println("An error occurred while trying to execute command:", err)
+		// Apologies for all the spread operators...
+
+		// Set: Access Key ID
+		err = executeCommand(append(baseCommand, []string{"aws_access_key_id", retrievedCreds.AccessKeyID}...)...)
+		if err != nil {
+			log.Println("An error occurred while trying to write the aws_access_key_id to file:", err)
+		}
+
+		// Set: Secret Access Key
+		err = executeCommand(append(baseCommand, []string{"aws_secret_access_key", retrievedCreds.SecretAccessKey}...)...)
+		if err != nil {
+			log.Println("An error occurred while trying to write the aws_secret_access_key to file:", err)
+		}
+
+		// Set: Session Token
+		err = executeCommand(append(baseCommand, []string{"aws_session_token", retrievedCreds.SessionToken}...)...)
+		if err != nil {
+			log.Println("An error occurred while trying to write the aws_access_key_id to file:", err)
+		}
+
+		// Set: Expiration Timestamp - Not used by the AWS CLI, but will allow the user to check.
+		err = executeCommand(append(baseCommand, []string{
+			"expiration_time", cachedProvider.GetCredentialExpiryTime().String()}...)...,
+		)
+		if err != nil {
+			log.Println("An error occurred while trying to write the aws_access_key_id to file:", err)
+		}
+
+		fmt.Println("Profile written:", writeToProfile)
 	}
 }
