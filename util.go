@@ -18,14 +18,13 @@ func getStringInputFromUser(prompt string) string {
 	return strings.TrimSuffix(text, "\n")
 }
 
-func oneTimePasscodeIsValid(code *string) bool {
+func oneTimePasscodeIsValid(code string) bool {
 	// Step 0 - It must be at least 6 characters
-	if len(*code) < 6 {
+	if len(code) < 6 {
 		return false
 	}
-	_, err := strconv.Atoi(*code)
+	_, err := strconv.Atoi(code)
 	if err != nil {
-		fmt.Println(err)
 		return false
 	}
 	return true

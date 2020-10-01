@@ -150,7 +150,7 @@ func main() {
 		oneTimePasscodeValid := false
 		for oneTimePasscodePrompts < 3 && oneTimePasscodeValid == false {
 			oneTimePasscode = getStringInputFromUser("MFA Code")
-			oneTimePasscodeValid = oneTimePasscodeIsValid(&oneTimePasscode)
+			oneTimePasscodeValid = oneTimePasscodeIsValid(oneTimePasscode)
 			oneTimePasscodePrompts++
 		}
 		if !oneTimePasscodeValid {
