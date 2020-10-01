@@ -146,8 +146,17 @@ func main() {
 	}
 
 	if tokenNeedsRefresh && oneTimePasscode == "" {
-		fmt.Println("Error: Please provide the MFA Token code (OTP) via the '-code' parameter.")
-		os.Exit(1)
+		oneTimePasscodePrompts := 0
+		oneTimePasscodeValid := false
+		for oneTimePasscodePrompts < 3 && oneTimePasscodeValid == false {
+			oneTimePasscode = getStringInputFromUser("MFA Code")
+			oneTimePasscodeValid = oneTimePasscodeIsValid(&oneTimePasscode)
+			oneTimePasscodePrompts++
+		}
+		if !oneTimePasscodeValid {
+			fmt.Println("Error: Please provide the MFA Token code (OTP) via the '-code' parameter.")
+			os.Exit(1)
+		}
 	}
 
 	// The static credentials we'll use to build the targetRole session
