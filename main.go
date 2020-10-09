@@ -39,7 +39,8 @@ func main() {
 	var showVersionInfo bool
 	var targetRole string
 	var tokenNeedsRefresh bool
-	var writeToProfile string
+	var writeToProfile bool
+	var targetProfile string
 
 	flag.BoolVar(&debug, "debug", false, "Enables debug logging.")
 	flag.BoolVar(&showRoleList, "list", false, "Displays a list of configured roles, then exits.")
@@ -49,7 +50,13 @@ func main() {
 	flag.StringVar(&baseProfile, "profile", "", "The base AWS config profile to use when creating the session.")
 	flag.StringVar(&oneTimePasscode, "code", "", "MFA Token OTP - The 6+ digit code that refreshes every 30 seconds.")
 	flag.StringVar(&targetRole, "role", "", "The role name or alias to assume.")
-	flag.StringVar(&writeToProfile, "write-profile", "", "The name of the profile to write credentials for.")
+	flag.BoolVar(
+		&writeToProfile,
+		"write-profile",
+		false,
+		"If set, roo will write the credentials to an AWS profile using the AWS CLI.",
+	)
+	flag.StringVar(&targetProfile, "target-profile", "", "The name of the profile to write credentials for.")
 
 	flag.Parse()
 
@@ -248,17 +255,23 @@ func main() {
 	}
 
 	// There is an exception to evaluating commands - And that's if we've been asked to write these credentials to file.
-	if writeToProfile == "" {
-		if debug {
-			log.Println("We're going to want to run the following command:", flag.Args())
+	if writeToProfile {
+
+		var targetProfileName string // We'll need to coalesce through some config , combined with flags.
+
+		if targetProfile == "" && role.TargetAWSProfile == "" {
+			log.Println("Please specify a target profile with -target-profile, or by specifying it in the config file.")
+			os.Exit(1)
 		}
-		err := executeCommand(flag.Args()...)
-		if err != nil {
-			log.Println("An error occurred while trying to execute command:", err)
+
+		if targetProfile != "" {
+			targetProfileName = targetProfile
+		} else {
+			targetProfileName = role.TargetAWSProfile
 		}
-	} else {
+
 		if verbose {
-			log.Println("We're going to write to profile! The profile's named", writeToProfile)
+			log.Println("We're going to write to profile! The profile's named", targetProfileName)
 		}
 		// Step 0 is to check that we have the AWS executable somewhere in the PATH.
 		cliPath, err := exec.LookPath("aws")
@@ -270,7 +283,7 @@ func main() {
 		}
 
 		// Okay, time to execute the commands we need to execute.
-		baseCommand := []string{cliPath, "--profile", writeToProfile, "configure", "set"}
+		baseCommand := []string{cliPath, "--profile", targetProfileName, "configure", "set"}
 
 		// Apologies for all the spread operators...
 
@@ -300,6 +313,14 @@ func main() {
 			log.Println("An error occurred while trying to write the aws_access_key_id to file:", err)
 		}
 
-		fmt.Println("Profile written:", writeToProfile)
+		fmt.Println("Profile written:", targetProfileName)
+	} else {
+		if debug {
+			log.Println("We're going to want to run the following command:", flag.Args())
+		}
+		err := executeCommand(flag.Args()...)
+		if err != nil {
+			log.Println("An error occurred while trying to execute command:", err)
+		}
 	}
 }

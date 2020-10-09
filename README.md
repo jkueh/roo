@@ -32,20 +32,26 @@ mfa_serial: arn:aws:iam::000000000000:mfa/my_mfa_serial
 base_profile: some-base-profile # optional - this is the AWS profile you use to log into the authentication account.
 roles:
   - name: something-prod-readonly
-    default: yes # optional, but helpful!
+    default: yes # Optional, but helpful!
     arn: arn:aws:iam::000000000000:role/ReadOnly
-    aliases: # optional, and also helpful!
+    aliases: # Optional, and also helpful!
       - something-prod
       - prod-readonly
+    # target_aws_profile (Optional):
+    # This is the name of the profile that 'roo' will write to when '-write-profile' is specified on the command line.
+    # If not specified, using -write-profile will require -profile-target.
+    target_aws_profile: "roo-default"
 
   - name: something-prod-deleteonly
     arn: arn:aws:iam::000000000000:role/DeleteOnly
     aliases:
       - deleteprod
+    target_aws_profile: "my-other-profile"
 
   - name: something-test-developer
     arn: arn:aws:iam::111111111111:role/Developer
     aliases:
       - something-dev
       - test-dev
+    target_aws_profile: "yet-another-profile"
 ```
