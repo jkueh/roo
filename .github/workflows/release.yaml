@@ -99,7 +99,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.PACKAGES_TOKEN }}
+          password: ${{ secrets.ZEROCUBE_PACKAGES_TOKEN }}
 
       - name: Build and push to GitHub Container Registry
         uses: docker/build-push-action@v2
