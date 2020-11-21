@@ -22,6 +22,8 @@ rm -v build/roo_* 2> /dev/null || true
 
 GOOS=linux    GOARCH=amd64  CACHE_DIR="/tmp/roo"  buildCommand "${@}"
 GOOS=darwin   GOARCH=amd64  CACHE_DIR="/tmp/roo"  buildCommand "${@}"
+GOOS=linux    GOARCH=arm64  CACHE_DIR="/tmp/roo"  buildCommand "${@}"
+GOOS=linux    GOARCH=mips64 CACHE_DIR="/tmp/roo"  buildCommand "${@}"
 GOOS=windows  GOARCH=amd64                        buildCommand "${@}"
 
 chmod 755 build/roo_*

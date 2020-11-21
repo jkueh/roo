@@ -22,6 +22,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 )
 
+const rooVersion = "0.1.1"
+
 var debug bool
 var verbose bool
 var configDir string
@@ -63,10 +65,10 @@ func main() {
 	config.Debug, config.Verbose = debug, verbose
 
 	if showVersionInfo {
-		if version == "" {
-			fmt.Println("Roo version unknown - 'version' variable not set at build time.")
+		if verbose {
+			fmt.Println("Roo version", rooVersion)
 		} else {
-			fmt.Println("Roo version", version)
+			fmt.Println(rooVersion)
 		}
 		os.Exit(0)
 	}
