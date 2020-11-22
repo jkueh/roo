@@ -11,7 +11,11 @@ COPY . ./
 
 ENV CGO_ENABLED=0
 
-RUN go test -v ./... && go build -o /roo -v .
+RUN go test -v ./...
+
+# -s and -w will strip out debugging information
+# From https://blog.filippo.io/shrink-your-go-binaries-with-this-one-weird-trick/
+RUN go build -ldflags "-s -w" -o /roo -v .
 
 ENTRYPOINT ["go", "run", "."]
 
