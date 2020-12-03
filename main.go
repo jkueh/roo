@@ -22,7 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 )
 
-const rooVersion = "0.1.1"
+const rooVersion = "0.2.0"
 
 var debug bool
 var verbose bool
