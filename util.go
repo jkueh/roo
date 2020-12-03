@@ -19,9 +19,7 @@ func getStringInputFromUser(prompt string) string {
 }
 
 func oneTimePasscodeIsValid(code string) (bool, error) {
-	// Step 0 - Sanitise the input to remove all trailing newline characters, e.g. \r and \n - and sometimes a combination
-	// of the two.
-	// Step 1 - It must be at least 6 characters
+	// Step 0 - It must be at least 6 characters
 	if len(code) < 6 {
 		return false, fmt.Errorf("Code provided was less than 6 characters long")
 	}

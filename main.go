@@ -159,7 +159,11 @@ func main() {
 		oneTimePasscodeValid := false
 		var oneTimePasscodeValidationError error
 		for oneTimePasscodePrompts < 3 && oneTimePasscodeValid == false {
-			oneTimePasscode = getStringInputFromUser("MFA Code")
+			oneTimePasscodeInput := getStringInputFromUser("MFA Code")
+
+			// Ensure that trailing newline characters are removed (e.g. Windows will add \r at the end)
+			oneTimePasscode = strings.TrimRight(oneTimePasscodeInput, "\r\n")
+
 			if debug {
 				log.Println("MFA Code Provided:", oneTimePasscode)
 			}
@@ -324,6 +328,15 @@ func main() {
 
 		fmt.Println("Profile written:", targetProfileName)
 	} else {
+		if debug {
+			log.Println("flag.Args() length:", len(flag.Args()))
+		}
+		if len(flag.Args()) == 0 { // Let's make sure we have something to run here...
+			// println() for STDERR output
+			println("Please provide a command to execute, e.g.:")
+			println("roo -role my_role_name aws sts get-caller-identity")
+			os.Exit(100)
+		}
 		if debug {
 			log.Println("We're going to want to run the following command:", flag.Args())
 		}
