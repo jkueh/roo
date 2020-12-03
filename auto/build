@@ -12,7 +12,7 @@ function buildCommand() {
   go build -v \
   -ldflags \
   "-X 'main.cacheDir=${CACHE_DIR:-""}' -X 'main.version=${GITHUB_REF##*/}'" \
-  -o "${OUTPUT_PATH}" \
+  -o "${OUTPUT_PATH}${FILE_EXT:-""}" \
   "${@}"
 }
 
@@ -24,6 +24,6 @@ GOOS=linux    GOARCH=amd64  CACHE_DIR="/tmp/roo"  buildCommand "${@}"
 GOOS=darwin   GOARCH=amd64  CACHE_DIR="/tmp/roo"  buildCommand "${@}"
 GOOS=linux    GOARCH=arm64  CACHE_DIR="/tmp/roo"  buildCommand "${@}"
 GOOS=linux    GOARCH=mips64 CACHE_DIR="/tmp/roo"  buildCommand "${@}"
-GOOS=windows  GOARCH=amd64                        buildCommand "${@}"
+GOOS=windows  GOARCH=amd64  FILE_EXT=".exe"       buildCommand "${@}"
 
 chmod 755 build/roo_*

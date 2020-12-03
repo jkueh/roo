@@ -6,7 +6,7 @@ import (
 )
 
 func executeCommand(commands ...string) error {
-	cmd := exec.Command("/usr/bin/env", commands...)
+	cmd := exec.Command(commands[0], commands[1:]...)
 	cmd.Stdout, cmd.Stderr, cmd.Stdin = os.Stdout, os.Stderr, os.Stdin
 	return cmd.Run()
 }
