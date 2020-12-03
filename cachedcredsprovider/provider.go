@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"log"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -122,11 +123,12 @@ func (p *CachedCredProvider) WriteNewCredentialsFromSTS(c *sts.Credentials, file
 		}
 	}
 
-	// Ensure the file permissions have been set19
-
-	err = cacheFile.Chmod(0600)
-	if err != nil {
-		log.Println("WARNING: Unable to set the file mode on the cache file", filePath, "-", err)
+	// Ensure the file permissions have been set - But skip this step for Windows.
+	if runtime.GOOS != "windows" {
+		err = cacheFile.Chmod(0600)
+		if err != nil {
+			log.Println("WARNING: Unable to set the file mode on the cache file", filePath, "-", err)
+		}
 	}
 
 	// Write to the cacheFile
