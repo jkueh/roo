@@ -157,9 +157,16 @@ func main() {
 	if tokenNeedsRefresh && oneTimePasscode == "" {
 		oneTimePasscodePrompts := 0
 		oneTimePasscodeValid := false
+		var oneTimePasscodeValidationError error
 		for oneTimePasscodePrompts < 3 && oneTimePasscodeValid == false {
 			oneTimePasscode = getStringInputFromUser("MFA Code")
-			oneTimePasscodeValid = oneTimePasscodeIsValid(oneTimePasscode)
+			if debug {
+				log.Println("MFA Code Provided:", oneTimePasscode)
+			}
+			oneTimePasscodeValid, oneTimePasscodeValidationError = oneTimePasscodeIsValid(oneTimePasscode)
+			if oneTimePasscodeValidationError != nil {
+				log.Println("Invalid MFA Code:", oneTimePasscodeValidationError)
+			}
 			oneTimePasscodePrompts++
 		}
 		if !oneTimePasscodeValid {
