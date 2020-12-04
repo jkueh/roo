@@ -16,6 +16,15 @@ I wrote this because I came across the following pattern:
 Quite frankly, I tired of using a convoluted bash script to generate session tokens in order to assume a role, so I
 wrote a thing to do it for me.
 
+## Command Precedence
+
+There's a few flags that are used to determine behaviour, and they are given the following precedence:
+
+* `--console` or `--console-url`
+* `--write-profile`
+
+If none of the above are specified, it defaults to executing the command provided.
+
 ## Configuration
 
 If you run `roo` once without a configuration file, it will generate a dummy one for you (at `${HOME}/.roo/config.yaml`)

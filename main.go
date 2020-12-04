@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
@@ -12,6 +15,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/pkg/browser"
 
 	"github.com/jkueh/roo/cachedcredsprovider"
 
@@ -22,7 +26,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 )
 
-const rooVersion = "0.2.0"
+const rooVersion = "0.3.0"
 
 var debug bool
 var verbose bool
@@ -43,6 +47,7 @@ func main() {
 	var tokenNeedsRefresh bool
 	var writeToProfile bool
 	var targetProfile string
+	var openConsoleURL, showConsoleURL bool
 
 	flag.BoolVar(&debug, "debug", false, "Enables debug logging.")
 	flag.BoolVar(&showRoleList, "list", false, "Displays a list of configured roles, then exits.")
@@ -59,6 +64,8 @@ func main() {
 		"If set, roo will write the credentials to an AWS profile using the AWS CLI.",
 	)
 	flag.StringVar(&targetProfile, "target-profile", "", "The name of the profile to write credentials for.")
+	flag.BoolVar(&openConsoleURL, "console", false, "Opens an AWS console session")
+	flag.BoolVar(&showConsoleURL, "console-url", false, "Prints the console URL to stdout")
 
 	flag.Parse()
 
@@ -327,6 +334,68 @@ func main() {
 		}
 
 		fmt.Println("Profile written:", targetProfileName)
+	} else if openConsoleURL || showConsoleURL { // We also skip command execution if
+		// Step one... Is to build the URL.
+		request, err := http.NewRequest(http.MethodGet, "https://signin.aws.amazon.com/federation", nil)
+		if err != nil {
+			log.Fatalln("Unable to construct request to federation endpoint:", err)
+		}
+		sessionData := map[string]string{
+			"sessionId":    retrievedCreds.AccessKeyID,
+			"sessionKey":   retrievedCreds.SecretAccessKey,
+			"sessionToken": retrievedCreds.SessionToken,
+		}
+		sessionDataJSON, err := json.Marshal(&sessionData)
+		if err != nil {
+			log.Fatalln("Unable to build session credentials for federation endpoint call:", err)
+		}
+		query := request.URL.Query()
+		query.Add("Action", "getSigninToken")
+		query.Add("SessionDuration", "43200")
+		query.Add("Session", string(sessionDataJSON))
+		request.URL.RawQuery = query.Encode()
+
+		resp, err := http.DefaultClient.Do(request)
+		if err != nil {
+			log.Fatalln("An error occurred while retrieving data from federation endpoint:", err)
+		}
+
+		respBody, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatalln("An error occurred while trying to read the response body from the federation endpoint:", err)
+		}
+
+		var signInTokenResponse SigninTokenResponse
+		err = json.Unmarshal(respBody, &signInTokenResponse)
+
+		consoleURLRequest, err := http.NewRequest(http.MethodGet, "https://signin.aws.amazon.com/federation", nil)
+		if err != nil {
+			log.Fatalln("Unable to construct console sign-in URL:", err)
+		}
+		consoleURLRequestQuery := consoleURLRequest.URL.Query()
+		consoleURLRequestQuery.Add("Action", "login")
+		consoleURLRequestQuery.Add("Issuer", "Example.org")
+		consoleURLRequestQuery.Add("Issuer", fmt.Sprintf("roo-%s", rooVersion))
+		consoleURLRequestQuery.Add("Destination", "https://console.aws.amazon.com/")
+		consoleURLRequestQuery.Add("SigninToken", signInTokenResponse.SigninToken)
+
+		consoleURLRequest.URL.RawQuery = consoleURLRequestQuery.Encode()
+
+		urlString := consoleURLRequest.URL.String()
+
+		if showConsoleURL { // If we're only asked to show it, print it and call it a day.
+			fmt.Println(urlString)
+		} else if openConsoleURL {
+			if debug {
+				log.Println("SigninToken:", signInTokenResponse.SigninToken)
+			}
+			err := browser.OpenURL(urlString)
+			if err != nil {
+				log.Fatalln("An error occurred while trying to get the system to open the console URL:", err)
+			}
+		} else {
+			log.Fatalln("Unhandled scenario: Not showConsoleURL or openConsoleURL")
+		}
 	} else {
 		if debug {
 			log.Println("flag.Args() length:", len(flag.Args()))
