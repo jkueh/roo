@@ -21,7 +21,7 @@ func getStringInputFromUser(prompt string) string {
 func oneTimePasscodeIsValid(code string) (bool, error) {
 	// Step 0 - It must be at least 6 characters
 	if len(code) < 6 {
-		return false, fmt.Errorf("Code provided was less than 6 characters long")
+		return false, fmt.Errorf("one-time passcode provided was less than 6 characters long")
 	}
 	_, err := strconv.Atoi(code)
 	if err != nil {
