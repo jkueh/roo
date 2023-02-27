@@ -14,7 +14,7 @@ jobs:
 
   build_docker:
     name: Test Build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     services:
       registry:
         image: registry:2
