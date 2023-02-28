@@ -14,14 +14,14 @@ jobs:
 
   build_docker:
     name: Test Build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     services:
       registry:
         image: registry:2
         ports:
           - 5000:5000
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v1

@@ -9,15 +9,15 @@ name: Main Release
 jobs:
   build:
     name: Build release artefacts
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.x
         uses: actions/setup-go@v2
         with:
-          go-version: ^1.15
+          go-version: ^1.19
         id: go
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Build project
         run: auto/build
       - name: Upload build artefacts
@@ -27,7 +27,7 @@ jobs:
           path: build/roo_*
   get_metadata:
     name: Get app metadata
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: []
     outputs:
       version_number: ${{ steps.get.outputs.version }}
@@ -36,10 +36,10 @@ jobs:
       - name: Set up Go 1.x
         uses: actions/setup-go@v2
         with:
-          go-version: ^1.15
+          go-version: ^1.19
         id: go
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - id: get
         name: Get version from command line
         run: |
@@ -52,7 +52,7 @@ jobs:
           echo ::set-output name=matching_tag::${MATCHING_TAG}
   create_release:
     name: Create GitHub Release
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs:
       - get_metadata
       - build
@@ -82,12 +82,12 @@ jobs:
 
   build_push_docker:
     name: Build & Push
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs:
       - get_metadata
     if: needs.get_metadata.outputs.matching_tag == ''
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -112,13 +112,13 @@ jobs:
 
   build_push_docker_legacy: # GitHub Packages is going away soon-ish.
     name: Build & Push (legacy)
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs:
       - get_metadata
     if: needs.get_metadata.outputs.matching_tag == ''
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Push to GitHub Packages
         uses: docker/build-push-action@v1
         with:

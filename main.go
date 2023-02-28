@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -26,13 +26,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 )
 
-const rooVersion = "0.3.0"
+const rooVersion = "0.3.1"
 
 var debug bool
 var verbose bool
 var configDir string
 var configFile string
-var version string
 
 // cacheDir is separately configurable, as on some systems you want it to write to /tmp so that the keys are purged
 // after the system is rebooted.
@@ -165,7 +164,7 @@ func main() {
 		oneTimePasscodePrompts := 0
 		oneTimePasscodeValid := false
 		var oneTimePasscodeValidationError error
-		for oneTimePasscodePrompts < 3 && oneTimePasscodeValid == false {
+		for oneTimePasscodePrompts < 3 && !oneTimePasscodeValid {
 			oneTimePasscodeInput := getStringInputFromUser("MFA Code")
 
 			// Ensure that trailing newline characters are removed (e.g. Windows will add \r at the end)
@@ -360,13 +359,16 @@ func main() {
 			log.Fatalln("An error occurred while retrieving data from federation endpoint:", err)
 		}
 
-		respBody, err := ioutil.ReadAll(resp.Body)
+		respBody, err := io.ReadAll(resp.Body)
 		if err != nil {
 			log.Fatalln("An error occurred while trying to read the response body from the federation endpoint:", err)
 		}
 
 		var signInTokenResponse SigninTokenResponse
 		err = json.Unmarshal(respBody, &signInTokenResponse)
+		if err != nil {
+			log.Fatalln("Unable to unmarshal sign-in token response to JSON:", err)
+		}
 
 		consoleURLRequest, err := http.NewRequest(http.MethodGet, "https://signin.aws.amazon.com/federation", nil)
 		if err != nil {
