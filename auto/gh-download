@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# Downloads the binaries from the latest GitHub actions run into the ./build/ directory
+
+rm -v build/roo_* > /dev/null 2>&1
+
+gh run download --name binaries --dir "build"
+
+chmod 755 build/roo_*
