@@ -2,7 +2,6 @@
 on:
   push:
     tags: ['v*']
-    tags-ignore: ['v*-beta*']
 
 name: Create Release
 
