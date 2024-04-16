@@ -1,7 +1,7 @@
 # Creates a GitHub release
 on:
   push:
-    tags: ['v*']
+    tags: ["v*"]
 
 name: Create Release
 
@@ -80,4 +80,4 @@ jobs:
           body: |
             Release: Version ${{ github.ref_name }}
 
-            Docker Image: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+            Docker Image: `ghcr.io/${{ github.repository }}:${{ github.ref_name }}`
