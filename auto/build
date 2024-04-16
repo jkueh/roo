@@ -2,7 +2,7 @@
 
 set -eu
 
-GITHUB_VERSION="$(grep '^v' <<< "${GITHUB_REF_NAME}")"
+GITHUB_VERSION="$(grep '^v' <<< "${GITHUB_REF_NAME}" || true)"
 GIT_SHA="$(git rev-parse --verify HEAD)"
 
 function getVersion() {
