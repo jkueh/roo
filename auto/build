@@ -2,16 +2,26 @@
 
 set -eu
 
-GOOS="${GOOS:-linux}"
-GOARCH="${GOARCH:-amd64}"
-GITHUB_REF="${GITHUB_REF:-""}"
+GIT_SHA="$(git rev-parse --verify HEAD)"
+
+function getVersion() {
+  if [ ! -z "${GITHUB_REF_NAME}" ]; then
+    echo "${GITHUB_REF_NAME}"
+  elif [ ! -z "${GIT_SHA}" ]; then
+    echo "${GIT_SHA}"
+  else
+    echo "unknown"
+  fi
+}
+
+ROO_VERSION="$(getVersion)"
 
 function buildCommand() {
   OUTPUT_PATH="build/roo_${GOOS}_${GOARCH}"
   echo "Building: ${OUTPUT_PATH}"
   go build -v \
   -ldflags \
-  "-X 'main.cacheDir=${CACHE_DIR:-""}' -X 'main.version=${GITHUB_REF##*/}'" \
+  "-X 'main.cacheDir=${CACHE_DIR:-""}' -X 'main.rooVersion=${ROO_VERSION}'" \
   -o "${OUTPUT_PATH}${FILE_EXT:-""}" \
   "${@}"
 }

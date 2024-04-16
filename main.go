@@ -26,7 +26,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 )
 
-const rooVersion = "0.3.1"
+var rooVersion string
 
 var debug bool
 var verbose bool
@@ -71,8 +71,8 @@ func main() {
 	config.Debug, config.Verbose = debug, verbose
 
 	if showVersionInfo {
-		if verbose {
-			fmt.Println("Roo version", rooVersion)
+		if rooVersion == "" {
+			fmt.Println("unknown_version")
 		} else {
 			fmt.Println(rooVersion)
 		}

@@ -1,5 +1,6 @@
 FROM golang:1.19 as builder
 
+ARG roo_version="unknown"
 
 WORKDIR /go/src/github.com/zerocube/roo
 
@@ -15,7 +16,7 @@ RUN go test -v ./...
 
 # -s and -w will strip out debugging information
 # From https://blog.filippo.io/shrink-your-go-binaries-with-this-one-weird-trick/
-RUN go build -ldflags "-s -w" -o /roo -v .
+RUN go build -ldflags "-s -w -X 'main.rooVersion=${roo_version}'" -o /roo -v .
 
 ENTRYPOINT ["go", "run", "."]
 
