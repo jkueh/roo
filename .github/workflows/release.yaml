@@ -28,6 +28,8 @@ jobs:
   build_push_docker:
     name: Build & Push
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     steps:
       - uses: actions/checkout@v3
 
