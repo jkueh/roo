@@ -65,7 +65,7 @@ jobs:
       - build_push_docker
     steps:
       - name: Download compiled binaries
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: binaries
           path: build/
