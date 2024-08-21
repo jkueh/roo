@@ -3,7 +3,7 @@ module github.com/jkueh/roo
 go 1.19
 
 require (
-	github.com/aws/aws-sdk-go v1.51.21
+	github.com/aws/aws-sdk-go v1.54.19
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	gopkg.in/yaml.v2 v2.4.0
 )
